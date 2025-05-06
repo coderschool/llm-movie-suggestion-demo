@@ -1,15 +1,25 @@
 import React from "react";
-import { useMovieStore } from "../_store/movie-store"; // Import the store
+import { useMovieStore } from "../_store/movie-store";
 import { Button } from "../_ui/button";
 import { SectionTitle } from "../_ui/section-title";
 
-// Define moods statically or fetch if needed
-const moods = ["Happy", "Sad", "Excited", "Calm", "Tense", "Romantic"];
+const moods = [
+  "Happy",
+  "Sad",
+  "Excited",
+  "Calm",
+  "Tense",
+  "Romantic",
+  "Adventurous",
+  "Thrilling",
+  "Mysterious",
+  "Funny",
+  "Scary",
+];
 
 const MoodSelector: React.FC = () => {
-  // Get state and actions from the store
   const selectedMoods = useMovieStore((state) => state.moods);
-  const setMood = useMovieStore((state) => state.setMoods); // Renamed action
+  const setMood = useMovieStore((state) => state.setMoods);
 
   return (
     <div className="w-full flex flex-col gap-2">

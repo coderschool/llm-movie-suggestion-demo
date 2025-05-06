@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { Movie, Genre } from "../_types/movies";
-import { getLlmMovieSuggestions } from "../_api/llm/llm.ts";
-import { getGenres } from "../_api/tmdb/tmdb.ts";
-import { LlmResponse } from "../_api/llm/llm.util.ts";
+import { LLMService } from "../_api/llm/llm.service";
+import { TMDBService } from "../_api/tmdb/tmdb.service";
+import { LlmResponse } from "../_api/llm/llm.util";
 
 interface MovieState {
   moods: string[];
@@ -44,7 +44,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     if (get().availableGenres.length > 0 || get().isFetchingGenres) return;
     set({ isFetchingGenres: true, error: null });
     try {
-      const genres = await getGenres();
+      const genres = await TMDBService.getInstance().getGenres();
       set({ availableGenres: genres || [], isFetchingGenres: false });
     } catch (error) {
       console.error("Failed to fetch TMDB genres:", error);
@@ -67,10 +67,11 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     const { moods, selectedGenreIds } = get();
 
     try {
-      const llmResult: LlmResponse = await getLlmMovieSuggestions(
-        moods,
-        selectedGenreIds
-      );
+      const llmResult: LlmResponse =
+        await LLMService.getInstance().getLlmMovieSuggestions(
+          moods,
+          selectedGenreIds
+        );
       set({
         suggestedMovies: llmResult.suggestions,
         suggestionExplanation: llmResult.explanation,

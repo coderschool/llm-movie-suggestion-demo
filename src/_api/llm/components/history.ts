@@ -1,8 +1,5 @@
 import { GeminiContent, GeminiFunctionCall, GeminiRole } from "../llm.type";
 
-/**
- * Manages the conversation history with the Gemini API.
- */
 export class History {
   private history: GeminiContent[];
 

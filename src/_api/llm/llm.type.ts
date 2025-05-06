@@ -47,10 +47,9 @@ export interface GeminiToolSet {
   functionDeclarations: GeminiFunctionDeclaration[];
 }
 
-// Define ToolConfig and FunctionCallingConfig types based on Gemini API
 export interface GeminiFunctionCallingConfig {
-  mode?: "AUTO" | "ANY" | "NONE"; // Mode can be one of these
-  allowedFunctionNames?: string[]; // Optional: specify which functions can be called
+  mode?: "AUTO" | "ANY" | "NONE";
+  allowedFunctionNames?: string[];
 }
 
 export interface GeminiToolConfig {
@@ -59,6 +58,6 @@ export interface GeminiToolConfig {
 
 export interface GeminiRequestBody {
   contents: GeminiContent[];
-  tools?: GeminiToolSet[]; // Make tools optional
-  toolConfig?: GeminiToolConfig; // Add optional toolConfig
+  tools?: GeminiToolSet[];
+  toolConfig?: GeminiToolConfig;
 }

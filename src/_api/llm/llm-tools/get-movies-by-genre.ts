@@ -1,4 +1,4 @@
-import { discoverMoviesByGenre } from "../../tmdb/tmdb";
+import { TMDBService } from "../../tmdb/tmdb.service";
 import { Movie } from "../../../_types/movies";
 import { GeminiFunctionDeclaration } from "../llm.type";
 
@@ -32,7 +32,9 @@ export const getMoviesByGenreToolHandler = async (
   }
 
   try {
-    const movies = await discoverMoviesByGenre(genreIds);
+    const movies = await TMDBService.getInstance().discoverMoviesByGenre(
+      genreIds
+    );
     return movies;
   } catch (error) {
     console.error(

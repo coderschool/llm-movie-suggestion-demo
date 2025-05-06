@@ -1,5 +1,5 @@
 import { Movie } from "../../../_types/movies.ts";
-import { getMovieDetails } from "../../tmdb/tmdb.ts";
+import { TMDBService } from "../../tmdb/tmdb.service.ts";
 import { GeminiFunctionDeclaration } from "../llm.type.ts";
 
 // --- Tool Definition for Gemini ---
@@ -35,14 +35,10 @@ export const getMovieDetailsByIdsToolHandler = async (
   try {
     // Use Promise.all to fetch details concurrently
     const movieDetailsPromises = movieIds.map((id) =>
-      // Call the method on the passed tmdb instance
-      getMovieDetails(id)
+      TMDBService.getInstance().getMovieDetails(id)
     );
 
     const movies = await Promise.all(movieDetailsPromises);
-    // Filter out any null results (movies not found)
-
-    console.log("movies in DETAILS TOOL", movies);
 
     return movies.filter(
       (movie: Movie | null): movie is Movie => movie !== null
