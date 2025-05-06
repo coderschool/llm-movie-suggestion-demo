@@ -1,13 +1,15 @@
 import { create } from "zustand";
 import { Movie, Genre } from "../_types/movies";
-import { getLlmMovieSuggestions } from "../_services/llm/llm.ts";
-import { getGenres } from "../_services/tmdb/tmdb.ts";
+import { getLlmMovieSuggestions } from "../_api/llm/llm.ts";
+import { getGenres } from "../_api/tmdb/tmdb.ts";
+import { LlmResponse } from "../_api/llm/llm.util.ts";
 
 interface MovieState {
   moods: string[];
   selectedGenreIds: number[];
   availableGenres: Genre[];
   suggestedMovies: Movie[];
+  suggestionExplanation: string | null;
   isFetchingGenres: boolean;
   isFetchingSuggestions: boolean;
   error: string | null;
@@ -28,6 +30,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   selectedGenreIds: [],
   availableGenres: [],
   suggestedMovies: [],
+  suggestionExplanation: null,
   isFetchingGenres: false,
   isFetchingSuggestions: false,
   error: null,
@@ -54,17 +57,23 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   },
   fetchSuggestions: async () => {
     if (get().isFetchingSuggestions) return;
-    set({ isFetchingSuggestions: true, error: null, suggestedMovies: [] });
+    set({
+      isFetchingSuggestions: true,
+      error: null,
+      suggestedMovies: [],
+      suggestionExplanation: null,
+    });
 
     const { moods, selectedGenreIds } = get();
 
     try {
-      const movies: Movie[] = await getLlmMovieSuggestions(
+      const llmResult: LlmResponse = await getLlmMovieSuggestions(
         moods,
         selectedGenreIds
       );
       set({
-        suggestedMovies: movies,
+        suggestedMovies: llmResult.suggestions,
+        suggestionExplanation: llmResult.explanation,
         isFetchingSuggestions: false,
         error: null,
       });
@@ -78,6 +87,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
         error: errorMessage,
         isFetchingSuggestions: false,
         suggestedMovies: [],
+        suggestionExplanation: "Failed to fetch suggestions due to an error.",
       });
     }
   },

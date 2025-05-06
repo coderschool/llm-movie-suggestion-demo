@@ -1,7 +1,7 @@
 import axios from "axios";
-// Import standalone function from reverted tmdb.ts
+
 import { getGenres } from "../tmdb/tmdb.ts";
-// Import necessary constants and types
+
 import { GEMINI_MODEL_NAME, API_BASE_URL } from "./llm.const.ts";
 import {
   GeminiPart,
@@ -11,10 +11,13 @@ import {
   GeminiRequestBody,
 } from "./llm.type.ts";
 import { History } from "./components/history.ts";
-// Import standalone functions/consts from reverted tooling.ts
+
 import { executeTool, tools as geminiTools } from "./components/tooling.ts";
-import { formatInitialPrompt, parseFinalLlmResponse } from "./llm.util.ts";
-import { Movie } from "../../_types/movies.ts";
+import {
+  formatInitialPrompt,
+  parseFinalLlmResponse,
+  LlmResponse,
+} from "./llm.util.ts";
 
 // --- Helper Function: Interaction Loop ---
 const runLlmInteractionLoop = async (
@@ -90,11 +93,11 @@ const runLlmInteractionLoop = async (
 export const getLlmMovieSuggestions = async (
   selectedMoods: string[],
   selectedGenreIds: number[]
-): Promise<Movie[]> => {
+): Promise<LlmResponse> => {
   const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
   if (!GEMINI_API_KEY) {
     console.warn("Skipping LLM suggestions: Gemini API Key is missing.");
-    return [];
+    return { suggestions: [], explanation: "Gemini API Key is missing." };
   }
 
   try {
@@ -116,9 +119,9 @@ export const getLlmMovieSuggestions = async (
       requestUrl
     );
 
-    const finalSuggestions = parseFinalLlmResponse(finalTextResponse);
+    const finalLlmOutput = parseFinalLlmResponse(finalTextResponse);
 
-    return finalSuggestions;
+    return finalLlmOutput;
   } catch (error) {
     console.error("Error during LLM suggestion process:");
     let errorMessage = "Failed to get movie suggestions.";
@@ -141,6 +144,6 @@ export const getLlmMovieSuggestions = async (
       "Consolidated Error (returning empty suggestions):",
       errorMessage
     );
-    return [];
+    return { suggestions: [], explanation: errorMessage };
   }
 };
