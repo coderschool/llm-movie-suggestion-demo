@@ -6,16 +6,12 @@ import {
 import { GeminiFunctionCall, GeminiToolSet } from "../llm.type";
 
 export class ToolingService {
-  // Export tools array directly as a static readonly property
   public static readonly tools: GeminiToolSet[] = [
     {
-      functionDeclarations: [
-        getMoviesByGenreTool /*, getMovieDetailsByIdsTool*/,
-      ],
+      functionDeclarations: [getMoviesByGenreTool],
     },
   ];
 
-  // Export executeTool as a static public method
   public static async executeTool(
     functionCall: GeminiFunctionCall
   ): Promise<unknown> {
@@ -23,16 +19,8 @@ export class ToolingService {
     console.log(`>>> Executing Tool: ${name}`, args);
     try {
       if (name === "get_movies_by_genre") {
-        // Call handler
         return await getMoviesByGenreToolHandler(args);
       }
-      // Comment out the execution path for the second tool
-      /*
-      if (name === "get_movie_details_by_ids") {
-        // Call handler
-        // return await getMovieDetailsByIdsToolHandler(args);
-      }
-      */
 
       const errorMsg = `Unknown tool function requested by LLM: ${name}`;
       console.error(errorMsg);

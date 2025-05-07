@@ -1,54 +1,440 @@
-# React + TypeScript + Vite
+# LLM Movie Agent Demo - README
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This document provides step-by-step instructions to recreate the LLM Movie Agent Demo project.
 
-Currently, two official plugins are available:
+## Project Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This application helps users discover movies based on their mood and preferred genres. It fetches movie data from The Movie Database (TMDB) and utilizes a Large Language Model (LLM) for providing personalized movie suggestions.
 
-## Expanding the ESLint configuration
+The primary objective of this project is to provide students with practical experience working with Large Language Models (LLMs). Students will learn to integrate an LLM-powered movie suggestion feature into an existing application (The Movie App). This involves writing custom prompts, configuring LLM API calls, and leveraging LLMs to generate meaningful movie recommendations based on user-selected genres and moods. This project offers an engaging way to apply LLMs in a real-world context and understand the fundamentals of prompt engineering and LLM integration in user-facing applications.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Tech Stack:**
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
+- **Frontend:** React with Vite, TypeScript
+- **Styling:** Tailwind CSS
+- **State Management:** Zustand
+- **API Interaction:** Axios
+- **LLM:** Google Gemini (via API)
+- **Movie Data:** TMDB API
+
+## Setup Instructions
+
+This section outlines the step-by-step process to build the LLM Movie Agent Demo.
+
+### 1. Project Initialization (Vite, TypeScript, Tailwind CSS)
+
+Follow these steps to set up the basic project structure:
+
+**a. Create Vite Project:**
+
+```bash
+npm create vite@latest llm-movie-agent-demo -- --template react-ts
+cd llm-movie-agent-demo
+```
+
+**b. Install Dependencies:**
+
+- **Core Dependencies:**
+  ```bash
+  npm install axios zustand lucide-react @fontsource/roboto-mono
+  ```
+- **Development Dependencies (Tailwind CSS & ESLint - versions from `package.json`):**
+  ```bash
+  npm install -D tailwindcss@^4.1.5 postcss@^8.5.3 autoprefixer@^10.4.21 @tailwindcss/vite@^4.1.5 @tailwindcss/postcss@^4.1.5 typescript@~5.7.2 @types/react@^19.0.10 @types/react-dom@^19.0.4 @vitejs/plugin-react@^4.3.4 eslint@^9.22.0 @eslint/js@^9.22.0 typescript-eslint@^8.26.1 globals@^16.0.0 eslint-plugin-react-hooks@^5.2.0 eslint-plugin-react-refresh@^0.4.19
+  ```
+  _(Note: Adjust versions as needed based on the original project's `package.json` if different.)_
+
+**c. Initialize Tailwind CSS:**
+
+```bash
+npx tailwindcss init -p
+```
+
+This will create `tailwind.config.js` and `postcss.config.js`.
+
+**d. Configure Tailwind CSS:**
+
+- **`tailwind.config.js`:**
+  Update your `tailwind.config.js` to include paths to your template files and any custom theme extensions (like the 'Roboto Mono' font).
+
+  ```javascript
+  const defaultTheme = require("tailwindcss/defaultTheme");
+
+  /** @type {import('tailwindcss').Config} */
+  export default {
+    content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+    theme: {
+      extend: {
+        fontFamily: {
+          mono: ['"Roboto Mono"', ...defaultTheme.fontFamily.mono],
+        },
+      },
+    },
+    plugins: [],
+  };
+  ```
+
+- **`vite.config.ts`:**
+  Add Tailwind CSS to your Vite plugins.
+
+  ```typescript
+  import { defineConfig } from "vite";
+  import tailwindcss from "@tailwindcss/vite"; // Updated import
+
+  // https://vitejs.dev/config/
+  export default defineConfig({
+    plugins: [tailwindcss()], // Use the imported plugin
+  });
+  ```
+
+- **`src/index.css`:**
+  Add the Tailwind directives to your main CSS file.
+
+  ```css
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+
+  /* Optional: Add global styles if needed */
+  body {
+    font-family: theme(
+      "fontFamily.sans"
+    ); /* Example: Use Tailwind's default sans-serif */
+  }
+  ```
+
+**e. TypeScript Configuration:**
+Ensure your `tsconfig.json` and `tsconfig.node.json` are set up appropriately for a Vite + React + TypeScript project. The default ones generated by `create-vite` are usually a good starting point. The project uses specific paths in `tsconfig.app.json` for includes.
+
+**f. ESLint Configuration (`eslint.config.js`):**
+Set up ESLint for linting and code style. The project uses a configuration similar to:
+
+```javascript
+import globals from "globals";
+import pluginJs from "@eslint/js";
+import tseslint from "typescript-eslint";
+import pluginReactConfig from "eslint-plugin-react/configs/recommended.js"; // May need to adjust based on exact version/setup
+import pluginReactHooks from "eslint-plugin-react-hooks";
+import pluginReactRefresh from "eslint-plugin-react-refresh";
+
+export default [
+  { languageOptions: { globals: globals.browser } },
+  pluginJs.configs.recommended,
+  ...tseslint.configs.recommended,
+  pluginReactConfig, // Ensure this is compatible with your ESLint version
+  {
+    files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
+    plugins: {
+      "react-hooks": pluginReactHooks,
+      "react-refresh": pluginReactRefresh,
+    },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "react-refresh/only-export-components": "warn",
+      // Add or override other rules as per project's eslint.config.js
     },
   },
-})
+];
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+_(Note: The exact ESLint setup can be complex and version-dependent. Refer to the project's original `eslint.config.js` for the precise configuration.)_
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+**g. Environment Variables & API Keys:**
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+**i. TMDB API Key:**
+Create a `.env` file in the root of your project to store your TMDB API key:
+
 ```
+VITE_TMDB_API_KEY=your_tmdb_api_key_here
+
+```
+
+Add `.env` to your `.gitignore` file. You can obtain a TMDB API key by signing up on [the TMDB website](https://www.themoviedb.org/signup).
+
+**ii. Gemini API Key Setup:**
+This project requires a Google Gemini API Key to power the LLM movie suggestions.
+
+- **Obtaining the Key:**
+  1. Go to [Google AI Studio](https://aistudio.google.com/).
+  2. Sign in with your Google account.
+  3. Click on "Get API key" and follow the instructions to create a new API key.
+  4. Copy your generated API key.
+- **Using the Key:** The Gemini API key is **not** stored in the `.env` file for this project's client-side implementation. Instead, it will be requested from the user directly in the application (e.g., via an input field in the `section-movie-display.tsx` component) and passed to the `fetchSuggestions` function in the `movie-store`.
+  - _Security Note for Instructors:_ For a production application or more advanced scenarios, API keys should be handled securely on a backend server or via cloud functions to avoid exposing them directly in the client-side code. This project simplifies this aspect for educational focus on LLM interaction.
+- **Troubleshooting Tips:**
+  - Ensure you have enabled the necessary APIs in your Google Cloud project if prompted.
+  - Double-check that you copied the entire API key correctly.
+  - If you encounter quota issues, you might be on a free tier with limitations.
+
+### 2. API and Services (`src/_api/`)
+
+This section covers creating services to fetch data from TMDB and interact with the Gemini LLM, including LLM API calls, prompt design, and tool usage.
+
+**a. Create Folder Structure:**
+
+```
+src/
+└── \_api/
+├── tmdb/
+│ ├── tmdb.const.ts
+│ └── tmdb.service.ts
+└── llm/
+├── llm.const.ts
+├── llm.service.ts
+├── llm.type.ts
+├── llm.util.ts
+├── components/ // For LLM sub-components like history, tooling
+│ └── (e.g., history.ts, tooling.ts)
+└── llm-tools/ // For specific tools the LLM can use
+└── (e.g., movie_lookup_tool.ts)
+
+```
+
+**b. TMDB Service (`src/_api/tmdb/`):**
+
+- **`tmdb.const.ts`:** Define constants like `TMDB_BASE_URL`, `MAX_PAGES_TO_FETCH`, etc.
+- **`tmdb.service.ts`:** Implement a `TMDBService` class (singleton pattern) using `axios`.
+  - Constructor: Initializes `axios` instance with base URL and API key (from `import.meta.env.VITE_TMDB_API_KEY`).
+  - Methods:
+    - `searchMovies(query: string)`: Searches movies.
+    - `getGenres()`: Fetches movie genres.
+    - `discoverMoviesByGenre(genreIds: number[])`: Discovers movies by genre, includes logic for fetching from multiple pages and randomizing results.
+    - `getMovieDetails(movieId: number)`: Fetches details for a specific movie.
+
+**c. LLM Service (`src/_api/llm/`):**
+This service is central to the educational objective, as students will interact with its components to understand prompt design and LLM API calls.
+
+- **`llm.type.ts`:** Define TypeScript types/interfaces for Gemini API requests/responses (e.g., `GeminiPart`, `GeminiFunctionCall`, `GeminiRequestBody`).
+- **`llm.const.ts`:** Define constants like `GEMINI_MODEL_NAME`, `API_BASE_URL` (for Gemini).
+- **`llm.util.ts`:** Include helper functions:
+  - `formatInitialPrompt(...)`: **Students will focus here to design an effective prompt.** This function takes user selections (mood, genre names/IDs) and available genres to construct the initial text prompt sent to the LLM.
+  - `parseFinalLlmResponse(...)`: To parse the LLM's final text response into a structured format (`LlmResponse` type: `{ suggestions: Movie[], explanation: string }`).
+- **`components/` (e.g., `history.ts`, `tooling.ts`):**
+  - `History`: A class to manage the conversation history with the LLM.
+  - `ToolingService`: A class or collection of functions to define and execute "tools" that the LLM can call. This is a key concept for students to grasp.
+    - _Example Tools:_
+      1.  `getMoviesByGenreTool`: A tool the LLM can request to fetch a list of movies matching the selected genre(s) from the TMDB API.
+      2.  `getMovieDetailsTool`: A tool the LLM can request to get detailed information (including director, poster, release year) for specific movie IDs it has selected based on the mood and initial genre list.
+    - _(Note: Genkit is a framework that can simplify the definition, execution, and orchestration of such tools in more complex LLM applications.)_
+- **`llm.service.ts`:** Implement an `LLMService` class (singleton pattern) using `axios`.
+  - Constructor: Initializes `axios` instance for LLM API calls.
+  - `getLlmMovieSuggestions(selectedMoods: string[], selectedGenreIds: number[], apiKey: string)`:
+    - Takes mood, genres, and the **user-provided Gemini API key** as input.
+    - Uses `TMDBService` to get available genres for context if needed by the prompt.
+    - **Core LLM Interaction Flow (to be implemented/understood by students):**
+      1. Formats the initial prompt using `formatInitialPrompt` incorporating user's mood and genre selections.
+      2. Manages conversation history using the `History` component.
+      3. Enters a loop (`runLlmInteractionLoop`):
+         a. Sends current history and available tools (from `ToolingService`) to the Gemini API.
+         b. **Tool Invocation:** If Gemini responds with a request to use a tool (e.g., `getMoviesByGenreTool`):
+         i. Execute the tool using `ToolingService` (which might internally call `TMDBService`).
+         ii. Add the tool's response (e.g., list of movies for the genre) back to the conversation history.
+         iii.The LLM then uses this new information (list of movies) along with the original mood to make further decisions, potentially calling another tool like `getMovieDetailsTool` for a refined list of movie IDs.
+         c. **Final Response:** If Gemini responds with text (and no further tool calls), this text should contain the final movie suggestions (e.g., a list of movie IDs and perhaps a brief explanation).
+      4. Parses the final LLM text output using `parseFinalLlmResponse` to extract movie IDs and the LLM's reasoning.
+      5. **Post-LLM Fetching (if needed):** If the LLM returns only IDs, the `LLMService` or the `movie-store` might need to make final calls to `TMDBService.getMovieDetails()` for each suggested ID to get full details for display.
+    - Returns the structured suggestions (list of `Movie` objects) and the explanation.
+  - Handles API errors gracefully.
+
+### 3. State Management (`src/_store/`)
+
+This step implements global state management using Zustand to handle application data, connect UI to services, and manage LLM suggestions.
+
+**a. Install Zustand:** (Already done in step 1b)
+
+**b. Create `movie-store.ts` (`src/_store/movie-store.ts`):**
+
+- Define `MovieState` interface:
+  - `moods: string[]`
+  - `selectedGenreIds: number[]`
+  - `availableGenres: Genre[]` (from `src/_types/movies.ts`)
+  - `suggestedMovies: Movie[]` (from `src/_types/movies.ts`)
+  - `suggestionExplanation: string | null`
+  - `isFetchingGenres: boolean`
+  - `isFetchingSuggestions: boolean`
+  - `error: string | null`
+  - Actions: `setMoods`, `setSelectedGenreIds`, `fetchAvailableGenres`, `fetchSuggestions`.
+- Implement the store using `create<MovieState>((set, get) => ({ ... }))`:
+  - Initial state values.
+  - `setMoods`: Toggles a mood string in the `moods` array.
+  - `setSelectedGenreIds`: Toggles a genre ID in the `selectedGenreIds` array.
+  - `fetchAvailableGenres`:
+    - Async action, sets loading state.
+    - Calls `TMDBService.getInstance().getGenres()`.
+    - Updates `availableGenres`, handles errors.
+  - `fetchSuggestions`:
+    - Async action, takes `apiKey` (for Gemini) as an argument.
+    - Sets loading state.
+    - Calls `LLMService.getInstance().getLlmMovieSuggestions()` with current moods, genres, and the API key.
+    - Updates `suggestedMovies`, `suggestionExplanation`, handles errors.
+
+**c. Define Types (`src/_types/movies.ts`):**
+Create `movies.ts` to define shared types:
+
+```typescript
+export interface Genre {
+  id: number;
+  name: string;
+}
+
+export interface Movie {
+  id: number;
+  title: string;
+  overview: string;
+  poster_path: string | null;
+  release_date: string; // Consider formatting this to just year for display
+  vote_average: number;
+  genre_ids?: number[];
+  genres?: Genre[];
+  director?: string; // Added as per PRD
+  tmdb_link?: string; // Added as per PRD (e.g., 'https://www.themoviedb.org/movie/id')
+  // Add other relevant fields from TMDB as needed
+}
+```
+
+### 4. Single Page Frontend (`src/App.tsx`, `src/main.tsx`)
+
+This section details setting up the main application shell (`App.tsx`) and the React application entry point (`main.tsx`).
+
+**a. `src/main.tsx`:**
+
+- This is the entry point.
+- Import `StrictMode` from `react`, `createRoot` from `react-dom/client`.
+- Import `App.tsx`, global CSS (`./index.css`), and any font imports (e.g., `@fontsource/roboto-mono/400.css`).
+- Render the `App` component within `StrictMode`.
+
+  ```typescript
+  import { StrictMode } from "react";
+  import { createRoot } from "react-dom/client";
+  import "./index.css"; // Tailwind + global styles
+  import App from "./App.tsx";
+  import "@fontsource/roboto-mono/400.css"; // Example font
+
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+  ```
+
+**b. `src/App.tsx`:**
+
+- This is the main application component.
+- Structure the layout using `div`s and Tailwind CSS classes (e.g., `flex`, `flex-col`, `h-screen`, `max-w-screen-2xl`).
+- Import and render the main section components:
+
+  - `SectionMoodSelector`
+  - `SectionGenreSelector`
+  - `SectionMovieDisplay`
+  - `Footer`
+
+    ```typescript
+    import SectionMoodSelector from "./_components/section-mood-selector";
+    import SectionGenreSelector from "./_components/section-genre-selector";
+    import SectionMovieDisplay from "./_components/section-movie-display";
+    import Footer from "./_components/footer";
+
+    function App() {
+      return (
+        <div className="h-screen bg-gray-50 text-gray-800 flex flex-col p-4 sm:p-6">
+          <main className="w-full grow max-w-screen-2xl mx-auto flex flex-col gap-4">
+            <SectionMoodSelector />
+            <div className="grow flex w-full gap-4 h-full">
+              {" "}
+              {/* Check flex layout specifics */}
+              <SectionGenreSelector />
+              <SectionMovieDisplay />
+            </div>
+            <Footer />
+          </main>
+        </div>
+      );
+    }
+    export default App;
+    ```
+
+### 5. UI Components (`src/_components/` and `src/_ui/`)
+
+This section covers building generic reusable UI elements and the main interactive section components for user selections and displaying LLM suggestions.
+
+**a. Create Folder Structure:**
+
+```
+src/
+├── _components/  // Page sections or complex components
+│   ├── section-mood-selector.tsx
+│   ├── section-genre-selector.tsx
+│   ├── section-movie-display.tsx
+│   └── footer.tsx
+└── _ui/          // Generic, reusable UI elements
+    ├── button.tsx
+    ├── card.tsx
+    ├── section-title.tsx
+    ├── loading-circle.tsx
+    └── (other common UI elements)
+```
+
+**b. Generic UI Elements (`src/_ui/`):**
+
+- **`button.tsx`**: A flexible button component with variants (primary, secondary, etc.), size options, and ability to include icons. Uses `lucide-react` for icons.
+- **`card.tsx`**: A simple card component for displaying content within a styled container.
+- **`section-title.tsx`**: A component for consistent section headings.
+- **`loading-circle.tsx`**: A loading spinner/indicator.
+
+**c. Section Components (`src/_components/`):**
+
+- **`section-mood-selector.tsx`:**
+  - Displays a list of moods (e.g., "Happy", "Excited", "Chill").
+  - Uses `useMovieStore` to get/set selected moods.
+  - Renders `Button` components from `src/_ui/` for each mood.
+- **`section-genre-selector.tsx`:**
+  - Fetches available genres from TMDB using `fetchAvailableGenres` from `useMovieStore` (e.g., in a `useEffect` hook).
+  - Displays genres as selectable items (e.g., buttons or checkboxes).
+  - Uses `useMovieStore` to get/set `selectedGenreIds` and `availableGenres`.
+  - Shows loading/error states for genre fetching.
+- **`section-movie-display.tsx`:**
+  - The main area to show movie suggestions.
+  - **Crucially, includes an input field for the user to enter their Gemini API Key.** This key is then passed to the `fetchSuggestions` action in the store.
+  - Has a "Suggest Movies" button that triggers `fetchSuggestions(apiKey)` from `useMovieStore`.
+  - Displays `suggestedMovies` from the store. Each movie should display:
+    - **Title**
+    - **Poster Image** (`poster_path` from the `Movie` type, prefixed with TMDB image base URL)
+    - **Release Year** (derived from `release_date`)
+    - **Director** (from the `Movie` type)
+    - A link to the movie on TMDB (using `tmdb_link` or constructed from `id`).
+  - Shows `suggestionExplanation` from the store (the LLM's reasoning).
+  - Handles loading states (`isFetchingSuggestions`) and error states from the store.
+  - May use the `Card` component from `src/_ui/` for each movie.
+- **`footer.tsx`:**
+  - Displays footer information (e.g., TMDB attribution, project links).
+
+### 6. Styling and Assets
+
+- **`src/index.css`:** Contains Tailwind directives and any global styles.
+- **`src/_assets/`:** Place any static assets like images or custom fonts here if not using a CDN or font library.
+- **`@fontsource/roboto-mono`:** Imported in `main.tsx` for the Roboto Mono font. Ensure this is correctly configured in `tailwind.config.js` if used globally or for specific elements.
+
+### 7. Running the Application
+
+- **Install all dependencies:**
+  ```bash
+  npm install
+  ```
+- **Start the development server:**
+  ```bash
+  npm run dev
+  ```
+- Open your browser to the local address provided by Vite (usually `http://localhost:5173`).
+
+### 8. Building for Production
+
+```bash
+npm run build
+```
+
+This will create a `dist` folder with the optimized production build. You can then preview it with `npm run preview`.
+
+---
+
+This comprehensive guide should help in recreating the LLM Movie Agent project. Remember to refer to the original project's specific file contents for exact implementations of logic, styling, and minor utility functions.
