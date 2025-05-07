@@ -55,15 +55,19 @@ export const parseFinalLlmResponse = (llmTextResponse: string): LlmResponse => {
         suggestionsData.length > 0 &&
         (suggestionsData[0] === null ||
           typeof suggestionsData[0]?.id !== "number" ||
-          typeof suggestionsData[0]?.title !== "string")
+          typeof suggestionsData[0]?.title !== "string" ||
+          (suggestionsData[0]?.reason !== undefined &&
+            typeof suggestionsData[0]?.reason !== "string"))
       ) {
         console.warn(
-          "Parsed suggestions array might contain non-Movie objects or nulls. First element:",
+          "Parsed suggestions array might contain non-Movie objects or nulls, or invalid 'reason' field. First element:",
           suggestionsData[0]
         );
       }
       return {
-        suggestions: suggestionsData.filter((movie) => movie !== null),
+        suggestions: suggestionsData
+          .filter((movie) => movie !== null)
+          .map((movie) => ({ ...movie, reason: movie.reason || undefined })),
         explanation: explanation ?? "No explanation provided by the LLM.",
       };
     }

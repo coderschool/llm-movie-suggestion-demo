@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { useMovieStore } from "../_store/movie-store";
 import { Movie } from "../_types/movies";
 import { LoadingCircle } from "../_ui/loading-circle";
@@ -16,7 +17,7 @@ const SectionMovieDisplay: React.FC = () => {
   );
   const error = useMovieStore((state) => state.error);
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   const scrollAmount = 300;
 
@@ -81,12 +82,12 @@ const SectionMovieDisplay: React.FC = () => {
               {/* Full content - overlays on hover */}
               <div
                 className="absolute top-0 left-0 w-full h-auto min-h-full
-                           p-4 bg-blue-50 border border-blue-300 rounded-lg shadow-xl 
+                           p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-xl 
                            opacity-0 group-hover:opacity-100 
                            transform scale-95 group-hover:scale-100 
                            transition-all duration-300 ease-in-out 
                            pointer-events-none group-hover:pointer-events-auto 
-                           z-20 overflow-y-auto max-h-80"
+                           z-100 overflow-y-auto max-h-80"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="h-4 w-4 flex-shrink-0" />
@@ -130,34 +131,85 @@ export default SectionMovieDisplay;
 
 const MovieCard: React.FC<{ movie: Movie }> = ({ movie }) => {
   const posterBaseUrl = "https://image.tmdb.org/t/p/w500";
-  return (
-    <Card className="flex flex-col w-64 flex-shrink-0 cursor-pointer">
-      {movie.poster_path ? (
-        <img
-          src={`${posterBaseUrl}${movie.poster_path}`}
-          alt={`${movie.title} poster`}
-          className="rounded w-full object-cover aspect-[7/8] bg-gray-200"
-          loading="lazy"
-        />
-      ) : (
-        <div className="aspect-[3/4] bg-gray-200 rounded flex items-center justify-center text-gray-400 text-sm">
-          No Poster
-        </div>
-      )}
-      <div className="flex flex-col gap-2 px-3 py-2">
-        <h3 className="text-lg font-semibold truncate" title={movie.title}>
-          {movie.title}
-        </h3>
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-gray-600 line-clamp-3 flex-grow">
-            {movie.overview}
-          </p>
-          <p className="text-sm text-gray-500 mt-auto">
-            Rating:{" "}
-            {movie.vote_average > 0 ? movie.vote_average.toFixed(1) : "N/A"}
-          </p>
-        </div>
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const iconRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isTooltipVisible && iconRef.current) {
+      const rect = iconRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.bottom + window.scrollY + 8, // 8px below the icon
+        left: rect.left + window.scrollX + rect.width / 2, // Center of the icon
+      });
+    } else {
+      setTooltipPosition(null); // Hide tooltip when not visible or ref is not available
+    }
+  }, [isTooltipVisible]);
+
+  const tooltipJsx =
+    isTooltipVisible && movie.reason && tooltipPosition ? (
+      <div
+        style={{
+          position: "absolute",
+          top: `${tooltipPosition.top}px`,
+          left: `${tooltipPosition.left}px`,
+          transform: "translateX(-100%)",
+          fontSize: "0.8rem",
+          zIndex: 50,
+        }}
+        className="w-auto max-w-xs p-3 bg-blue-50 border-2 border-blue-200 text-blue-700 rounded-md shadow-xl break-words"
+      >
+        {movie.reason}
       </div>
-    </Card>
+    ) : null;
+
+  return (
+    <div className="relative">
+      <Card className="flex flex-col w-64 flex-shrink-0 cursor-pointer relative">
+        {movie.reason && (
+          <div
+            ref={iconRef}
+            onMouseEnter={() => setIsTooltipVisible(true)}
+            onMouseLeave={() => setIsTooltipVisible(false)}
+            className="absolute top-2 right-2 p-1 bg-blue-50 border border-blue-200 rounded-full cursor-pointer z-40"
+          >
+            <Sparkles className="h-4 w-4 text-blue-700" />
+          </div>
+        )}
+
+        {tooltipJsx && ReactDOM.createPortal(tooltipJsx, document.body)}
+
+        {movie.poster_path ? (
+          <img
+            src={`${posterBaseUrl}${movie.poster_path}`}
+            alt={`${movie.title} poster`}
+            className="rounded w-full object-cover aspect-[7/8] bg-gray-200"
+            loading="lazy"
+          />
+        ) : (
+          <div className="aspect-[3/4] bg-gray-200 rounded flex items-center justify-center text-gray-400 text-sm">
+            No Poster
+          </div>
+        )}
+        <div className="flex flex-col gap-2 px-3 py-2">
+          <h3 className="text-lg font-semibold truncate" title={movie.title}>
+            {movie.title}
+          </h3>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-gray-600 line-clamp-3 flex-grow">
+              {movie.overview}
+            </p>
+            <p className="text-sm text-gray-500 mt-auto">
+              Rating:{" "}
+              {movie.vote_average > 0 ? movie.vote_average.toFixed(1) : "N/A"}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 };
