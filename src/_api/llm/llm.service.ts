@@ -21,16 +21,7 @@ export class LLMService {
 
   private llmClient: AxiosInstance;
 
-  private GEMINI_API_KEY: string;
-
   private constructor() {
-    this.GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!this.GEMINI_API_KEY) {
-      throw new Error(
-        "LLMService: Gemini API Key is missing. Please add VITE_GEMINI_API_KEY to your .env file."
-      );
-    }
-
     this.llmClient = axios.create({
       baseURL: API_BASE_URL,
       headers: { "Content-Type": "application/json" },
@@ -47,8 +38,12 @@ export class LLMService {
 
   private async runLlmInteractionLoop(
     historyManager: History,
-    tools: GeminiToolSet[]
+    tools: GeminiToolSet[],
+    apiKey: string
   ): Promise<string> {
+    if (!apiKey || !apiKey.trim()) {
+      throw new Error("Gemini API Key is missing in runLlmInteractionLoop.");
+    }
     while (true) {
       const currentHistory = historyManager.getHistory();
       const lastTurn =
@@ -64,7 +59,7 @@ export class LLMService {
           : { tools: tools }),
       };
 
-      const requestUrl = `${GEMINI_MODEL_NAME}:generateContent?key=${this.GEMINI_API_KEY}`;
+      const requestUrl = `${GEMINI_MODEL_NAME}:generateContent?key=${apiKey}`;
 
       const currentResponse = await this.llmClient.post(
         requestUrl,
@@ -114,8 +109,14 @@ export class LLMService {
 
   public async getLlmMovieSuggestions(
     selectedMoods: string[],
-    selectedGenreIds: number[]
+    selectedGenreIds: number[],
+    apiKey: string
   ): Promise<LlmResponse> {
+    if (!apiKey || !apiKey.trim()) {
+      console.warn("Skipping LLM suggestions: Gemini API Key is missing.");
+      return { suggestions: [], explanation: "Gemini API Key is missing." };
+    }
+
     try {
       const tmdbService = TMDBService.getInstance();
       const availableGenres = await tmdbService.getGenres();
@@ -130,7 +131,8 @@ export class LLMService {
 
       const finalTextResponse = await this.runLlmInteractionLoop(
         historyManager,
-        ToolingService.tools
+        ToolingService.tools,
+        apiKey
       );
 
       const finalLlmOutput = parseFinalLlmResponse(finalTextResponse);

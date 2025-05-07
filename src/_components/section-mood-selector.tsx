@@ -9,15 +9,16 @@ const moods = [
   "Excited",
   "Calm",
   "Tense",
-  "Romantic",
-  "Adventurous",
-  "Thrilling",
-  "Mysterious",
-  "Funny",
-  "Scary",
+  "Thought-provoking",
+  "Uplifting",
+  "Heartwarming",
+  "Nostalgic",
+  "Whimsical",
+  "Mind-bending",
+  "Epic",
 ];
 
-const MoodSelector: React.FC = () => {
+const SectionMoodSelector: React.FC = () => {
   const selectedMoods = useMovieStore((state) => state.moods);
   const setMood = useMovieStore((state) => state.setMoods);
 
@@ -44,4 +45,4 @@ const MoodSelector: React.FC = () => {
   );
 };
 
-export default MoodSelector;
+export default SectionMoodSelector;

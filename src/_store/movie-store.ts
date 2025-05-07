@@ -16,7 +16,7 @@ interface MovieState {
   setMoods: (mood: string) => void;
   setSelectedGenreIds: (genreId: number) => void;
   fetchAvailableGenres: () => Promise<void>;
-  fetchSuggestions: () => Promise<void>;
+  fetchSuggestions: (apiKey: string) => Promise<void>;
 }
 
 const toggleArrayItem = <T>(array: T[], item: T): T[] => {
@@ -55,7 +55,16 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       });
     }
   },
-  fetchSuggestions: async () => {
+  fetchSuggestions: async (apiKey: string) => {
+    if (!apiKey || !apiKey.trim()) {
+      set({
+        error: "Gemini API Key is required to fetch suggestions.",
+        isFetchingSuggestions: false,
+        suggestedMovies: [],
+        suggestionExplanation: "API Key missing.",
+      });
+      return;
+    }
     if (get().isFetchingSuggestions) return;
     set({
       isFetchingSuggestions: true,
@@ -70,7 +79,8 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       const llmResult: LlmResponse =
         await LLMService.getInstance().getLlmMovieSuggestions(
           moods,
-          selectedGenreIds
+          selectedGenreIds,
+          apiKey
         );
       set({
         suggestedMovies: llmResult.suggestions,

@@ -26,11 +26,11 @@ export const Button = ({
   if (variant !== "card") {
     const variantClasses = {
       primary:
-        "bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow-md",
+        "bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow-lg",
       secondary:
-        "bg-white hover:bg-gray-100 text-gray-700 font-semibold shadow-md",
+        "bg-white hover:bg-gray-100 text-gray-700 font-semibold shadow-lg",
       outline:
-        "border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold shadow-md",
+        "border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold shadow-lg",
     };
     buttonClass = variantClasses[variant] || variantClasses.primary;
 

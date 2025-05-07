@@ -4,7 +4,7 @@ import { Button } from "../_ui/button";
 import { SectionTitle } from "../_ui/section-title";
 import { LoadingCircle } from "../_ui/loading-circle";
 
-const GenreSelector: React.FC = () => {
+const SectionGenreSelector: React.FC = () => {
   const availableGenres = useMovieStore((state) => state.availableGenres);
   const selectedGenreIds = useMovieStore((state) => state.selectedGenreIds);
   const isFetchingGenres = useMovieStore((state) => state.isFetchingGenres);
@@ -61,4 +61,4 @@ const GenreSelector: React.FC = () => {
   );
 };
 
-export default GenreSelector;
+export default SectionGenreSelector;
